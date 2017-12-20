@@ -13,11 +13,15 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.cheny.demo.gank.R;
+import com.cheny.demo.gank.base.DaggerAppComponent;
 import com.cheny.demo.gank.model.AndroidAPI;
+import com.cheny.demo.gank.module.HttpModule;
 import com.cheny.demo.gank.view.adapter.AndroidListAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.inject.Inject;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -35,6 +39,7 @@ public class AndroidFragment extends Fragment implements AndroidContract.View {
     SwipeRefreshLayout mSwiprefresh;
     Unbinder unbinder;
     private AndroidListAdapter mMeizhiListAdapter;
+    @Inject
     AndroidPresenter mAndroidPresenter;
     List<AndroidAPI> mAndroidAPIS;
     private boolean mIsFirstTimeTouchBottom = true;
@@ -59,6 +64,7 @@ public class AndroidFragment extends Fragment implements AndroidContract.View {
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        DaggerAppComponent.builder().httpModule(new HttpModule(this)).build().inject(this);
         initViews();
         initRecyclerView();
         initSwipeRefresh();
@@ -72,13 +78,13 @@ public class AndroidFragment extends Fragment implements AndroidContract.View {
     }
 
     private void initViews() {
-        mAndroidPresenter = new AndroidPresenter(this);
+        //mAndroidPresenter = new AndroidPresenter(this);
         mAndroidAPIS = new ArrayList<>();
     }
 
     private void initRecyclerView() {
         StaggeredGridLayoutManager staggeredGridLayoutManager = new StaggeredGridLayoutManager(2,
-            StaggeredGridLayoutManager.VERTICAL);
+                StaggeredGridLayoutManager.VERTICAL);
         mRecyclerview.setLayoutManager(staggeredGridLayoutManager);
         mMeizhiListAdapter = new AndroidListAdapter(getActivity(), mAndroidAPIS);
         mRecyclerview.setAdapter(mMeizhiListAdapter);
@@ -116,9 +122,9 @@ public class AndroidFragment extends Fragment implements AndroidContract.View {
     private void initSwipeRefresh() {
         if (mSwiprefresh != null) {
             mSwiprefresh.setColorSchemeResources(android.R.color.holo_blue_bright,
-                android.R.color.holo_green_light,
-                android.R.color.holo_orange_light,
-                android.R.color.holo_red_light);
+                    android.R.color.holo_green_light,
+                    android.R.color.holo_orange_light,
+                    android.R.color.holo_red_light);
             mSwiprefresh.setOnRefreshListener(() -> mAndroidPresenter.refreshAndroidDatas(10, 1));
         }
     }

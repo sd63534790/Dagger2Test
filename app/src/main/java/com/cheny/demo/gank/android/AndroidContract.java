@@ -12,7 +12,7 @@ import java.util.List;
 
 public class AndroidContract {
 
-    interface View extends BaseView<Presenter> {
+    public interface View extends BaseView<Presenter> {
 
         void showLoading();
 
@@ -29,7 +29,7 @@ public class AndroidContract {
         void showError(String msg);
     }
 
-    interface Presenter extends BasePresenter {
+    public interface Presenter extends BasePresenter {
 
         void loadAndroidDatas(int pageSize, int pageIndex);
 

@@ -2,6 +2,7 @@ package com.cheny.demo.gank.android;
 
 import android.support.annotation.NonNull;
 
+import com.cheny.demo.gank.http.RetrofitHelper;
 import com.cheny.demo.gank.http.RetrofitSingleton;
 import com.cheny.demo.gank.model.AndroidAPI;
 import com.cheny.demo.gank.model.WelfareAPI;
@@ -10,6 +11,8 @@ import com.cheny.demo.gank.model.reponse.ExceptionHandle;
 import com.cheny.demo.gank.model.reponse.HttpObserver;
 
 import java.util.List;
+
+import javax.inject.Inject;
 
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -24,7 +27,11 @@ public class AndroidPresenter implements AndroidContract.Presenter {
     @NonNull
     private final AndroidContract.View mView;
 
-    public AndroidPresenter(@NonNull AndroidContract.View view) {
+    private RetrofitHelper retrofitHelper;
+
+    @Inject
+    public AndroidPresenter(RetrofitHelper retrofitHelper, @NonNull AndroidContract.View view) {
+        this.retrofitHelper = retrofitHelper;
         mView = view;
         mView.setPresenter(this);
     }
@@ -32,47 +39,46 @@ public class AndroidPresenter implements AndroidContract.Presenter {
     @Override
     public void loadAndroidDatas(int pageSize, int pageIndex) {
         mView.showLoading();
-        Observable.zip(RetrofitSingleton.getInstance()
-            .finAndroidList(pageSize, pageIndex), RetrofitSingleton.getInstance()
-            .finWelfareApiList(pageSize, pageIndex), (listApiResult, listApiResult2) -> mergeData(listApiResult, listApiResult2))
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(new HttpObserver<ApiResult<List<AndroidAPI>>>() {
-                @Override
-                public void onError(ExceptionHandle.ResponeThrowable responeThrowable) {
-                    mView.showError(responeThrowable.getMessage());
-                    mView.hideLoading();
-                }
+        Observable.zip(retrofitHelper.getAndroidData(pageSize, pageIndex), RetrofitSingleton.getInstance()
+                .finWelfareApiList(pageSize, pageIndex), (listApiResult, listApiResult2) -> mergeData(listApiResult, listApiResult2))
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new HttpObserver<ApiResult<List<AndroidAPI>>>() {
+                    @Override
+                    public void onError(ExceptionHandle.ResponeThrowable responeThrowable) {
+                        mView.showError(responeThrowable.getMessage());
+                        mView.hideLoading();
+                    }
 
-                @Override
-                public void onNext(ApiResult<List<AndroidAPI>> listApiResult) {
-                    mView.showAndroidList(listApiResult.getResults());
-                    mView.hideLoading();
-                }
-            });
+                    @Override
+                    public void onNext(ApiResult<List<AndroidAPI>> listApiResult) {
+                        mView.showAndroidList(listApiResult.getResults());
+                        mView.hideLoading();
+                    }
+                });
     }
 
     @Override
     public void refreshAndroidDatas(int pageSize, int pageIndex) {
         mView.showRefreshLoading();
         Observable.zip(RetrofitSingleton.getInstance()
-            .finAndroidList(pageSize, pageIndex), RetrofitSingleton.getInstance()
-            .finWelfareApiList(pageSize, pageIndex), (listApiResult, listApiResult2) -> mergeData(listApiResult, listApiResult2))
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(new HttpObserver<ApiResult<List<AndroidAPI>>>() {
-                @Override
-                public void onError(ExceptionHandle.ResponeThrowable responeThrowable) {
-                    mView.showError(responeThrowable.getMessage());
-                    mView.hideRefreshLoading();
-                }
+                .finAndroidList(pageSize, pageIndex), RetrofitSingleton.getInstance()
+                .finWelfareApiList(pageSize, pageIndex), (listApiResult, listApiResult2) -> mergeData(listApiResult, listApiResult2))
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new HttpObserver<ApiResult<List<AndroidAPI>>>() {
+                    @Override
+                    public void onError(ExceptionHandle.ResponeThrowable responeThrowable) {
+                        mView.showError(responeThrowable.getMessage());
+                        mView.hideRefreshLoading();
+                    }
 
-                @Override
-                public void onNext(ApiResult<List<AndroidAPI>> listApiResult) {
-                    mView.refreshAndroidList(listApiResult.getResults());
-                    mView.hideRefreshLoading();
-                }
-            });
+                    @Override
+                    public void onNext(ApiResult<List<AndroidAPI>> listApiResult) {
+                        mView.refreshAndroidList(listApiResult.getResults());
+                        mView.hideRefreshLoading();
+                    }
+                });
     }
 
     /**
